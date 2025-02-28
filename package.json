@@ -1,0 +1,46 @@
+{
+  "name": "quicvarint",
+  "version": "0.1.0",
+  "description": "Variable-Length Integer Encoding defined by RFC 9000",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "bench": "vitest bench",
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "format": "eslint src eslint.config.mjs --fix",
+    "lint": "eslint src eslint.config.mjs",
+    "prepublishOnly": "npm run build",
+    "test": "vitest",
+    "watch": "npm run build -- --watch src"
+  },
+  "repository": "github:thibmeu/quicvarint",
+  "keywords": [
+    "varint",
+    "rfc9000",
+    "cryptography",
+    "2msb",
+    "typescript"
+  ],
+  "author": "Thibault Meunier",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/thibmeu/quicvarint/issues"
+  },
+  "homepage": "https://github.com/thibmeu/quicvarint#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "eslint": "^9.21.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.25.0",
+    "vitest": "^3.0.7"
+  }
+}
