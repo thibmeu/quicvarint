@@ -15,8 +15,8 @@
   "scripts": {
     "bench": "vitest bench",
     "build": "tsup src/index.ts --format cjs,esm --dts --clean",
-    "format": "eslint src eslint.config.mjs --fix",
-    "lint": "eslint src eslint.config.mjs",
+    "format": "eslint src/*.ts eslint.config.mjs --fix",
+    "lint": "eslint src/*.ts eslint.config.mjs",
     "prepublishOnly": "npm run build",
     "test": "vitest",
     "watch": "npm run build -- --watch src"
