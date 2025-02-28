@@ -26,7 +26,7 @@ Variable-Length Integer Encoding defined by [RFC 9000](https://www.rfc-editor.or
 ```typescript
 import { encode, decode, MAX } from "quicvarint"
 
-// A nuber between 0 and MAX
+// A number between 0 and MAX
 const n = 1234
 
 // Encode it to a Uint8Array
