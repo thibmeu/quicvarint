@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.1.3] - 2025-02-28
+
+### Changed
+
+- `decode` now takes a `Uint8Array` instead of a `ArrayBufferLike`
+
+### Fix
+
+- Remove .github from npm package
+
 ## [0.1.2] - 2025-02-28
 
 ### Fix

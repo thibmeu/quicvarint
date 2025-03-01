@@ -1,6 +1,6 @@
 {
   "name": "quicvarint",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Variable-Length Integer Encoding defined by RFC 9000",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
