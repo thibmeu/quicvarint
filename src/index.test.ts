@@ -24,7 +24,7 @@ describe('Parsing', () => {
 
   tests.forEach(({ name, input, expected }) => {
     it(`should correctly parse ${name}`, () => {
-      const result = decode(input.buffer);
+      const result = decode(input);
       console.log([...encode(expected)].map(s => s.toString(16)))
       expect(result.value).toBe(expected);
     });

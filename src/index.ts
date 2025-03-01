@@ -30,8 +30,8 @@ export const read = (input: DataView, offset: number): { value: number; usize: n
     return { value: v, usize: length };
 };
 
-export const decode = (input: ArrayBufferLike): { value: number; usize: number } => {
-    return read(new DataView(input), 0)
+export const decode = (input: Uint8Array): { value: number; usize: number } => {
+    return read(new DataView(input.buffer), 0)
 };
 
 export const encodeWithLength = (n: number, len: number): Uint8Array => {

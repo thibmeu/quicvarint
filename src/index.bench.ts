@@ -54,7 +54,7 @@ describe('Benchmarking decode', () => {
       bench(name, () => {
         const inputs = randomValues(1024, input);
         for (const input of inputs) {
-          decode(input.b.buffer);
+          decode(input.b);
         }
       });
   })
