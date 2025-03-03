@@ -61,7 +61,9 @@ export const encodeWithLength = (n: number, len: number): Uint8Array => {
     const bytes = new Uint8Array(len);
     bytes[0] = (prefix << 6) | ((n >> ((len - 1) * 8)) & 0b00111111);
 
-    for (let i = 1; i < len; i++) {
+    for (let i = 1; i < bytes.length; i++) {
+        // we could use bytes.set([value], i), but there are clear performance penalties
+        // eslint-disable-next-line security/detect-object-injection
         bytes[i] = (n >> ((len - 1 - i) * 8)) & 0xff;
     }
 
