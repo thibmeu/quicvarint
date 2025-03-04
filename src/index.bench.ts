@@ -26,22 +26,21 @@ const randomValues = (num: number, maxValue: number) => {
   return values;
 };
 
-describe('Benchmarking read', () => {
+describe('Benchmarking 1024 read', () => {
   tests.forEach(({ name, input }) => {
+    const inputs = randomValues(1024, input).map(v => new DataView(v.b.buffer));
       bench(name, () => {
-        const inputs = randomValues(1024, input);
         for (const input of inputs) {
-          const dataView = new DataView(input.b.buffer);
-          read(dataView, 0);
+          read(input, 0);
         }
       });
   })
 });
 
-describe('Benchmarking encode', () => {
+describe('Benchmarking 1024 encode', () => {
   tests.forEach(({ name, input }) => {
+      const inputs = randomValues(1024, input);
       bench(name, () => {
-        const inputs = randomValues(1024, input);
         for (const input of inputs) {
           encode(input.v);
         }
@@ -49,10 +48,10 @@ describe('Benchmarking encode', () => {
   })
 })
 
-describe('Benchmarking decode', () => {
+describe('Benchmarking 1024 decode', () => {
   tests.forEach(({ name, input }) => {
+      const inputs = randomValues(1024, input);
       bench(name, () => {
-        const inputs = randomValues(1024, input);
         for (const input of inputs) {
           decode(input.b);
         }
