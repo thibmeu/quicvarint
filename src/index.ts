@@ -34,7 +34,7 @@ export const decode = (input: Uint8Array): { value: number; usize: number } => {
     return read(new DataView(input.buffer), 0)
 };
 
-export const encodeWithLength = (n: number, len: number): Uint8Array => {
+export const encode = (n: number, len = length(n)): Uint8Array => {
     if (n > MAX) {
         throw new Error("Number is too big")
     }
@@ -69,10 +69,6 @@ export const encodeWithLength = (n: number, len: number): Uint8Array => {
 
     return bytes;
 };
-
-export const encode = (n: number): Uint8Array => {
-    return encodeWithLength(n, length(n))
-}
 
 export const length = (n: number): number => {
     if (n < MIN) {

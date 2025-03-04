@@ -1,0 +1,13 @@
+[
+    { "name": "zero", "value": 0, "length": 1, "prefix": 0, "bytes": "00" },
+    { "name": "1 byte", "value": 37, "length": 1, "prefix": 0, "bytes": "25" },
+    { "name": "max 1 byte", "value": 63, "length": 1, "prefix": 0, "bytes": "3f" },
+    { "name": "min 2 bytes", "value": 64, "length": 2, "prefix": 1, "bytes": "4040" },
+    { "name": "2 bytes", "value": 15293, "length": 2, "prefix": 1, "bytes": "7bbd" },
+    { "name": "max 2 bytes", "value": 16383, "length": 2, "prefix": 2, "bytes": "7fff" },
+    { "name": "min 4 bytes", "value": 16384, "length": 4, "prefix": 2, "bytes": "80004000" },
+    { "name": "4 bytes", "value": 494878333, "length": 4, "prefix": 2, "bytes": "9d7f3e7d" },
+    { "name": "max 4 bytes", "value": 1073741823, "length": 4, "prefix": 3, "bytes": "bfffffff" },
+    { "name": "min 8 bytes", "value": 1073741824, "length": 8, "prefix": 3, "bytes": "c000000040000000" },
+    { "name": "8 bytes", "value": 1126253345, "length": 8, "prefix": 3, "bytes": "c321432143214321" }
+]
