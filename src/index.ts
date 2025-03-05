@@ -69,6 +69,12 @@ export const decode = (input: Uint8Array): { value: number; usize: number } => {
                 throw new Error('There should be 8 bytes or more in the array')
             }
 
+            if ((input[0] & PREFIX_MASK) !== 0 ||
+                input[1] !== 0 ||
+                input[2] !== 0 ||
+                input[3] !== 0) {
+                throw new Error(`Cannot decode number greater than ${MAX}`)
+            }
             const value =
                 (input[4] << 24) |
                 (input[5] << 16) |
