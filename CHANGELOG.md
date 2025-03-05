@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.1.4] - 2025-03-05
+
+### Changed
+
+- `encode` can take an optional length parameter
+- `decode` and `encode` performance improved by inlining byte operations
+
 ## [0.1.3] - 2025-02-28
 
 ### Changed
