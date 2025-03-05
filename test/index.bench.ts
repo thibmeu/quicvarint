@@ -1,5 +1,5 @@
 import { describe, bench } from 'vitest';
-import { decode, encode, read } from '.';
+import { decode, encode, read } from '../src';
 
 // Tests taken from https://github.com/quic-go/quic-go/blob/09bb613c6679ba130e950214a178ded510741578/quicvarint/varint_test.go
 // There are no test vectors on RFC 9000

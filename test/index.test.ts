@@ -24,20 +24,24 @@ const tests = vectors.map(v => ({
 
 // Tests for parsing
 describe('Parsing', () => {
-  tests.forEach(({ name, bytes: input, value: expected }) => {
+  tests.forEach(({ name, bytes: input, value: expected, length }) => {
     it(`should correctly parse ${name}`, () => {
       const result = decode(input);
-      console.log([...encode(expected)].map(s => s.toString(16)))
       expect(result.value).toBe(expected);
+      expect(result.usize).toBe(length);
     });
   });
 });
 
 // Tests for encoding
 describe('Varint Encoding', () => {
-  tests.forEach(({ name, value: input, bytes: expected }) => {
+  tests.forEach(({ name, value: input, bytes: expected, minimal_encoding, length }) => {
     it(`should correctly encode ${name}`, () => {
-      expect(encode(input)).toEqual(expected);
+      if (minimal_encoding) {
+        expect(encode(input)).toEqual(expected);
+      }
+      console.log(input, length, expected, encode(input, length))
+      expect(encode(input, length)).toEqual(expected);
     });
   });
 
@@ -48,7 +52,7 @@ describe('Varint Encoding', () => {
 
 // Tests for length
 describe('Length', () => {
-  tests.forEach(({ name, value: input, length: expected }) => {
+  tests.filter(t => t.minimal_encoding).forEach(({ name, value: input, length: expected }) => {
     it(`should return correct length for ${name}`, () => {
       expect(length(input)).toBe(expected);
     });
