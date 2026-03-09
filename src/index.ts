@@ -11,26 +11,26 @@ const PREFIX_MASK = 0b0011_1111
 // implemented using https://www.rfc-editor.org/rfc/rfc9000.html#name-sample-variable-length-inte
 export const read = (input: DataView, offset: number): { value: number; usize: number } => {
     // v = data.next_byte()
-    const b = input.getUint8(offset);
-    offset += 1;
+    const b = input.getUint8(offset)
+    offset += 1
 
     // prefix = v >> 6
-    const prefix = b >> 6;
+    const prefix = b >> 6
     // length = 1 << prefix
-    const length = 1 << prefix;
+    const length = 1 << prefix
 
     // v = v & 0x3f
-    let v = b & PREFIX_MASK;
+    let v = b & PREFIX_MASK
 
     // repeat length-1 times:
     for (let i = 0; i < length - 1; i += 1) {
         // v = (v << 8) + data.next_byte()
-        v = (v << 8) + input.getUint8(offset);
-        offset += 1;
+        v = (v << 8) + input.getUint8(offset)
+        offset += 1
     }
     // return v
-    return { value: v, usize: length };
-};
+    return { value: v, usize: length }
+}
 
 export const decode = (input: Uint8Array): { value: number; usize: number } => {
     if (input.length === 0) {
@@ -47,9 +47,7 @@ export const decode = (input: Uint8Array): { value: number; usize: number } => {
                 throw new Error('There should be 2 bytes or more in the array')
             }
 
-            const value =
-                ((input[0] & PREFIX_MASK) << 8) |
-                input[1]
+            const value = ((input[0] & PREFIX_MASK) << 8) | input[1]
             return { value, usize: 2 }
         }
         case 0b10: {
@@ -58,10 +56,7 @@ export const decode = (input: Uint8Array): { value: number; usize: number } => {
             }
 
             const value =
-                ((input[0] & PREFIX_MASK) << 24) |
-                (input[1] << 16) |
-                (input[2] << 8) |
-                input[3]
+                ((input[0] & PREFIX_MASK) << 24) | (input[1] << 16) | (input[2] << 8) | input[3]
             return { value, usize: 4 }
         }
         case 0b11: {
@@ -69,42 +64,40 @@ export const decode = (input: Uint8Array): { value: number; usize: number } => {
                 throw new Error('There should be 8 bytes or more in the array')
             }
 
-            if ((input[0] & PREFIX_MASK) !== 0 ||
+            if (
+                (input[0] & PREFIX_MASK) !== 0 ||
                 input[1] !== 0 ||
                 input[2] !== 0 ||
-                input[3] !== 0) {
+                input[3] !== 0
+            ) {
                 throw new Error(`Cannot decode number greater than ${MAX}`)
             }
-            const value =
-                (input[4] << 24) |
-                (input[5] << 16) |
-                (input[6] << 8) |
-                input[7]
+            const value = (input[4] << 24) | (input[5] << 16) | (input[6] << 8) | input[7]
             return { value, usize: 8 }
         }
     }
     throw new Error('Invalid prefix')
-};
+}
 
 export const encode = (n: number, len = length(n)): Uint8Array => {
     if (n > MAX) {
-        throw new Error("Number is too big")
+        throw new Error('Number is too big')
     }
 
-    const bytes = new Uint8Array(len);
+    const bytes = new Uint8Array(len)
     const BYTE = 0b1111_1111
     switch (len) {
         case 1:
             bytes[0] = 0b0000_0000 | (n & PREFIX_MASK)
             break
         case 2:
-            bytes[0] = 0b0100_0000 | (n >> 8 & PREFIX_MASK)
+            bytes[0] = 0b0100_0000 | ((n >> 8) & PREFIX_MASK)
             bytes[1] = n & BYTE
             break
         case 4:
-            bytes[0] = 0b1000_0000 | (n >> 24 & PREFIX_MASK)
-            bytes[1] = n >> 16 & BYTE
-            bytes[2] = n >> 8 & BYTE
+            bytes[0] = 0b1000_0000 | ((n >> 24) & PREFIX_MASK)
+            bytes[1] = (n >> 16) & BYTE
+            bytes[2] = (n >> 8) & BYTE
             bytes[3] = n & BYTE
             break
         case 8:
@@ -112,24 +105,24 @@ export const encode = (n: number, len = length(n)): Uint8Array => {
             // bytes[1] = 0 // only 32-bit integer
             // bytes[2] = 0
             // bytes[3] = 0
-            bytes[4] = n >> 24 & BYTE
-            bytes[5] = n >> 16 & BYTE
-            bytes[6] = n >> 8 & BYTE
+            bytes[4] = (n >> 24) & BYTE
+            bytes[5] = (n >> 16) & BYTE
+            bytes[6] = (n >> 8) & BYTE
             bytes[7] = n & BYTE
             break
         default:
             throw new Error('Invalid length')
     }
 
-    return bytes;
-};
+    return bytes
+}
 
 export const length = (n: number): number => {
     if (n < MIN) {
-        throw new Error('Cannot encode negative numbers');
+        throw new Error('Cannot encode negative numbers')
     }
     if (n > MAX) {
-        throw new Error("Number is too big")
+        throw new Error('Number is too big')
     }
 
     if (n > MAX_VARINT_4) {
