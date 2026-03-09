@@ -10,26 +10,30 @@ const PREFIX_MASK = 0b0011_1111
 
 // implemented using https://www.rfc-editor.org/rfc/rfc9000.html#name-sample-variable-length-inte
 export const read = (input: DataView, offset: number): { value: number; usize: number } => {
+    const remaining = input.byteLength - offset
+    if (remaining < 1) {
+        throw new Error('Need at least 1 byte')
+    }
+
     // v = data.next_byte()
     const b = input.getUint8(offset)
-    offset += 1
 
-    // prefix = v >> 6
-    const prefix = b >> 6
-    // length = 1 << prefix
-    const length = 1 << prefix
+    // prefix = v >> 6, length = 1 << prefix
+    const usize = 1 << (b >> 6)
+
+    if (remaining < usize) {
+        throw new Error(`Need ${usize} bytes but only ${remaining} available`)
+    }
 
     // v = v & 0x3f
     let v = b & PREFIX_MASK
 
-    // repeat length-1 times:
-    for (let i = 0; i < length - 1; i += 1) {
-        // v = (v << 8) + data.next_byte()
-        v = (v << 8) + input.getUint8(offset)
-        offset += 1
+    // repeat length-1 times: v = (v << 8) + data.next_byte()
+    for (let i = 1; i < usize; i += 1) {
+        v = (v << 8) + input.getUint8(offset + i)
     }
-    // return v
-    return { value: v, usize: length }
+
+    return { value: v, usize }
 }
 
 export const decode = (input: Uint8Array): { value: number; usize: number } => {
@@ -68,7 +72,8 @@ export const decode = (input: Uint8Array): { value: number; usize: number } => {
                 (input[0] & PREFIX_MASK) !== 0 ||
                 input[1] !== 0 ||
                 input[2] !== 0 ||
-                input[3] !== 0
+                input[3] !== 0 ||
+                input[4] > 0x7f
             ) {
                 throw new Error(`Cannot decode number greater than ${MAX}`)
             }
@@ -79,9 +84,15 @@ export const decode = (input: Uint8Array): { value: number; usize: number } => {
     throw new Error('Invalid prefix')
 }
 
-export const encode = (n: number, len = length(n)): Uint8Array => {
+export const encode = (n: number, len?: number): Uint8Array => {
     if (n > MAX) {
         throw new Error('Number is too big')
+    }
+    const minLen = length(n)
+    if (len === undefined) {
+        len = minLen
+    } else if (len < minLen) {
+        throw new Error(`Length ${len} insufficient for value ${n}, need at least ${minLen}`)
     }
 
     const bytes = new Uint8Array(len)
