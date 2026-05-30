@@ -1,134 +1,107 @@
-const MAX_VARINT_1 = 0x3f
-const MAX_VARINT_2 = 0x3fff
-const MAX_VARINT_4 = 0x3fffffff
-const MAX_VARINT_8 = 0x7fffffff // not going above 31-1 bits
+// Per-tier offsets: OFFSETS[t] is the first value that requires t additional bytes.
+// Tier 0 values (0–247) are encoded as the byte itself (no offset arithmetic needed).
+const OFFSETS = [
+    0,                   // tier 0 (unused in arithmetic)
+    248,                 // tier 1: 248
+    504,                 // tier 2: 248 + 256
+    66040,               // tier 3: 504 + 256²
+    16843256,            // tier 4: 66040 + 256³
+    4311810552,          // tier 5: 16843256 + 256⁴
+    1103823438328,       // tier 6: 4311810552 + 256⁵
+    282578800148984,     // tier 7: 1103823438328 + 256⁶
+]
+
+// Per-tier exclusive upper bounds. BOUNDS[t] == OFFSETS[t+1] for tiers 0–6.
+// Tier 7 is capped at Number.MAX_SAFE_INTEGER + 1 (no BigInt support).
+const BOUNDS = [
+    248,                          // tier 0: 0–247
+    504,                          // tier 1: 248–503
+    66040,                        // tier 2: 504–66039
+    16843256,                     // tier 3: 66040–16843255
+    4311810552,                   // tier 4: 16843256–4311810551
+    1103823438328,                // tier 5: 4311810552–1103823438327
+    282578800148984,              // tier 6: 1103823438328–282578800148983
+    Number.MAX_SAFE_INTEGER + 1,  // tier 7: 282578800148984–MAX_SAFE_INTEGER
+]
+
+const TAG_THRESHOLD = 248
 
 export const MIN = 0
-export const MAX = MAX_VARINT_8
+export const MAX = Number.MAX_SAFE_INTEGER
 
-const PREFIX_MASK = 0b0011_1111
-
-// implemented using https://www.rfc-editor.org/rfc/rfc9000.html#name-sample-variable-length-inte
 export const read = (input: DataView, offset: number): { value: number; usize: number } => {
     const remaining = input.byteLength - offset
     if (remaining < 1) {
         throw new Error('Need at least 1 byte')
     }
 
-    // v = data.next_byte()
-    const b = input.getUint8(offset)
+    const tag = input.getUint8(offset)
 
-    // prefix = v >> 6, length = 1 << prefix
-    const usize = 1 << (b >> 6)
+    if (tag < TAG_THRESHOLD) {
+        return { value: tag, usize: 1 }
+    }
+
+    const tier = tag - TAG_THRESHOLD + 1
+    if (tier > 7) {
+        throw new Error(`Cannot decode number greater than ${MAX}`)
+    }
+    const usize = tier + 1
 
     if (remaining < usize) {
         throw new Error(`Need ${usize} bytes but only ${remaining} available`)
     }
 
-    // v = v & 0x3f
-    let v = b & PREFIX_MASK
-
-    // repeat length-1 times: v = (v << 8) + data.next_byte()
-    for (let i = 1; i < usize; i += 1) {
-        v = (v << 8) + input.getUint8(offset + i)
+    let payload = 0
+    for (let i = 1; i < usize; i++) {
+        payload = payload * 256 + input.getUint8(offset + i)
     }
 
-    return { value: v, usize }
+    const value = payload + OFFSETS[tier]
+    if (value > MAX) {
+        throw new Error(`Cannot decode number greater than ${MAX}`)
+    }
+
+    return { value, usize }
 }
 
 export const decode = (input: Uint8Array): { value: number; usize: number } => {
     if (input.length === 0) {
-        throw new Error('There should be bytes in the array')
+        throw new Error('Need at least 1 byte')
     }
-    const prefix = input[0] >> 6
-    switch (prefix) {
-        case 0b00: {
-            const value = input[0] & PREFIX_MASK
-            return { value, usize: 1 }
-        }
-        case 0b01: {
-            if (input.length < 2) {
-                throw new Error('There should be 2 bytes or more in the array')
-            }
 
-            const value = ((input[0] & PREFIX_MASK) << 8) | input[1]
-            return { value, usize: 2 }
-        }
-        case 0b10: {
-            if (input.length < 4) {
-                throw new Error('There should be 4 bytes or more in the array')
-            }
+    const tag = input[0]
 
-            const value =
-                ((input[0] & PREFIX_MASK) << 24) | (input[1] << 16) | (input[2] << 8) | input[3]
-            return { value, usize: 4 }
-        }
-        case 0b11: {
-            if (input.length < 8) {
-                throw new Error('There should be 8 bytes or more in the array')
-            }
-
-            if (
-                (input[0] & PREFIX_MASK) !== 0 ||
-                input[1] !== 0 ||
-                input[2] !== 0 ||
-                input[3] !== 0 ||
-                input[4] > 0x7f
-            ) {
-                throw new Error(`Cannot decode number greater than ${MAX}`)
-            }
-            const value = (input[4] << 24) | (input[5] << 16) | (input[6] << 8) | input[7]
-            return { value, usize: 8 }
-        }
+    if (tag < TAG_THRESHOLD) {
+        return { value: tag, usize: 1 }
     }
-    throw new Error('Invalid prefix')
+
+    const tier = tag - TAG_THRESHOLD + 1
+    if (tier > 7) {
+        throw new Error(`Cannot decode number greater than ${MAX}`)
+    }
+    const usize = tier + 1
+
+    if (input.length < usize) {
+        throw new Error(`Need ${usize} bytes but only ${input.length} available`)
+    }
+
+    let payload = 0
+    for (let i = 1; i < usize; i++) {
+        payload = payload * 256 + input[i]
+    }
+
+    const value = payload + OFFSETS[tier]
+    if (value > MAX) {
+        throw new Error(`Cannot decode number greater than ${MAX}`)
+    }
+
+    return { value, usize }
 }
 
-export const encode = (n: number, len?: number): Uint8Array => {
-    if (n > MAX) {
-        throw new Error('Number is too big')
+export const encodedLen = (n: number): number => {
+    if (!Number.isInteger(n)) {
+        throw new Error('Value must be a finite integer')
     }
-    const minLen = length(n)
-    if (len === undefined) {
-        len = minLen
-    } else if (len < minLen) {
-        throw new Error(`Length ${len} insufficient for value ${n}, need at least ${minLen}`)
-    }
-
-    const bytes = new Uint8Array(len)
-    const BYTE = 0b1111_1111
-    switch (len) {
-        case 1:
-            bytes[0] = 0b0000_0000 | (n & PREFIX_MASK)
-            break
-        case 2:
-            bytes[0] = 0b0100_0000 | ((n >> 8) & PREFIX_MASK)
-            bytes[1] = n & BYTE
-            break
-        case 4:
-            bytes[0] = 0b1000_0000 | ((n >> 24) & PREFIX_MASK)
-            bytes[1] = (n >> 16) & BYTE
-            bytes[2] = (n >> 8) & BYTE
-            bytes[3] = n & BYTE
-            break
-        case 8:
-            bytes[0] = 0b1100_0000
-            // bytes[1] = 0 // only 32-bit integer
-            // bytes[2] = 0
-            // bytes[3] = 0
-            bytes[4] = (n >> 24) & BYTE
-            bytes[5] = (n >> 16) & BYTE
-            bytes[6] = (n >> 8) & BYTE
-            bytes[7] = n & BYTE
-            break
-        default:
-            throw new Error('Invalid length')
-    }
-
-    return bytes
-}
-
-export const length = (n: number): number => {
     if (n < MIN) {
         throw new Error('Cannot encode negative numbers')
     }
@@ -136,14 +109,67 @@ export const length = (n: number): number => {
         throw new Error('Number is too big')
     }
 
-    if (n > MAX_VARINT_4) {
-        return 8
+    for (let tier = 0; tier < BOUNDS.length; tier++) {
+        if (n < BOUNDS[tier]) {
+            return tier + 1
+        }
     }
-    if (n > MAX_VARINT_2) {
-        return 4
+
+    throw new Error('Number is too big')
+}
+
+export const encode = (n: number): Uint8Array => {
+    if (!Number.isInteger(n)) {
+        throw new Error('Value must be a finite integer')
     }
-    if (n > MAX_VARINT_1) {
-        return 2
+    if (n < MIN) {
+        throw new Error('Cannot encode negative numbers')
     }
-    return 1
+    if (n > MAX) {
+        throw new Error('Number is too big')
+    }
+
+    // Tiers 0–4: payload fits in 32 bits, use bitwise extraction via >>>.
+    // Tiers 5–7: payload exceeds 32 bits, fall back to arithmetic.
+    if (n < BOUNDS[0]) {
+        const b = new Uint8Array(1)
+        b[0] = n
+        return b
+    }
+    if (n < BOUNDS[1]) {
+        const b = new Uint8Array(2)
+        b[0] = 0xf8; b[1] = n - OFFSETS[1]
+        return b
+    }
+    if (n < BOUNDS[2]) {
+        const p = n - OFFSETS[2]
+        const b = new Uint8Array(3)
+        b[0] = 0xf9; b[1] = (p >>> 8) & 0xff; b[2] = p & 0xff
+        return b
+    }
+    if (n < BOUNDS[3]) {
+        const p = n - OFFSETS[3]
+        const b = new Uint8Array(4)
+        b[0] = 0xfa; b[1] = (p >>> 16) & 0xff; b[2] = (p >>> 8) & 0xff; b[3] = p & 0xff
+        return b
+    }
+    if (n < BOUNDS[4]) {
+        const p = n - OFFSETS[4]  // max 0xFFFFFFFF, safe for >>>
+        const b = new Uint8Array(5)
+        b[0] = 0xfb; b[1] = (p >>> 24) & 0xff; b[2] = (p >>> 16) & 0xff; b[3] = (p >>> 8) & 0xff; b[4] = p & 0xff
+        return b
+    }
+
+    // Tiers 5–7: payload exceeds 32 bits, must use arithmetic division.
+    let tier = 5
+    while (n >= BOUNDS[tier]) tier++
+    const len = tier + 1
+    const bytes = new Uint8Array(len)
+    bytes[0] = TAG_THRESHOLD + tier - 1
+    let payload = n - OFFSETS[tier]
+    for (let i = len - 1; i >= 1; i--) {
+        bytes[i] = payload % 256
+        payload = Math.floor(payload / 256)
+    }
+    return bytes
 }
