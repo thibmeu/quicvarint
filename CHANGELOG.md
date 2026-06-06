@@ -6,9 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-06-06
+
 ### Added
 
 - Property-based fuzz tests using fast-check covering round-trip, boundary, and corruption properties
+
+### Changed
+
+- Switched build tooling from tsup to tsdown
+- Bumped dev dependencies
 
 ## [0.1.6] - 2026-03-09
 
