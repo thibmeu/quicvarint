@@ -1,6 +1,6 @@
 {
   "name": "quicvarint",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Variable-Length Integer Encoding defined by RFC 9000",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -18,7 +18,9 @@
       }
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "bench": "vitest bench",
     "build": "tsdown --format esm,cjs --sourcemap --target es2022",
