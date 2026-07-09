@@ -24,10 +24,11 @@
   "scripts": {
     "bench": "vitest bench",
     "build": "tsdown --format esm,cjs --sourcemap --target es2022",
-    "format": "eslint src/*.ts test/*.ts eslint.config.mjs --fix",
-    "lint": "eslint src/*.ts test/*.ts eslint.config.mjs",
+    "format": "prettier --write \"{src,test}/**/*.ts\" && oxlint --fix src test",
+    "lint": "prettier --check \"{src,test}/**/*.ts\" && oxlint src test",
     "prepublishOnly": "npm run build",
     "test": "vitest",
+    "typecheck": "tsc --noEmit",
     "watch": "npm run build -- --watch"
   },
   "repository": "github:thibmeu/quicvarint",
@@ -44,18 +45,18 @@
     "url": "https://github.com/thibmeu/quicvarint/issues"
   },
   "homepage": "https://github.com/thibmeu/quicvarint#readme",
+  "overrides": {
+    "tsdown": {
+      "typescript": "$typescript"
+    }
+  },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
     "@fast-check/vitest": "^0.4.0",
-    "eslint": "^10.0.3",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.5",
-    "eslint-plugin-security": "^4.0.0",
     "fast-check": "^4.6.0",
+    "oxlint": "^1.73.0",
     "prettier": "^3.8.1",
     "tsdown": "^0.22.1",
-    "typescript": "^6.0.2",
-    "typescript-eslint": "^8.57.1",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.0"
   }
 }
