@@ -14,6 +14,8 @@ describe('Limits', () => {
     })
 })
 
+// Uint8Array.fromHex replaces this, but Node 24 lacks it.
+// Drop this helper once the CI matrix bottoms out at Node 26.
 const hex_decode = (s: string): Uint8Array => {
     const matches = s.match(/.{1,2}/g)
     return Uint8Array.from(matches ?? [], (b) => parseInt(b, 16))
