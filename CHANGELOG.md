@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-- `Cursor` interface (`{ buf, p }`) and `readFrom`, `tryReadFrom`, `writeTo` for reading and writing varints in place. They return a bare number and advance the cursor rather than allocating a subarray and a result object per call, which is 2.7-3.9x faster for parsers reading a run of varints. `tryReadFrom` returns `undefined` on a truncated varint, for incremental parsers where a short read is expected rather than an error
+- `Cursor` interface (`{ buf, p }`) and `readFrom`, `tryReadFrom`, `writeTo` for reading and writing varints in place. They return a bare number and advance the cursor rather than allocating a subarray and a result object per call, which is 2.7-3.9x faster for parsers reading a run of varints. `tryReadFrom` returns `undefined` on a truncated varint, for incremental parsers where a short read is expected rather than an error. `writeTo` throws if the cursor's buffer is too small to hold the varint, rather than letting the out-of-range writes drop silently and advancing `p` past the end
 
 ### Fixed
 

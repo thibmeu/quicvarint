@@ -71,6 +71,28 @@ describe('writeTo', () => {
     it('rejects a length too small for the value', () => {
         expect(() => writeTo(cursor(new Uint8Array(8)), 16384, 2)).toThrow()
     })
+
+    it('rejects a buffer too small to hold the varint', () => {
+        const buf = new Uint8Array(2)
+        const c = cursor(buf)
+        expect(() => writeTo(c, 1_000_000)).toThrow()
+        expect(c.p).toBe(0)
+        expect(Array.from(buf)).toEqual([0, 0])
+    })
+
+    it('rejects writing past the end of a partially filled buffer', () => {
+        const c = cursor(new Uint8Array(4), 2)
+        expect(() => writeTo(c, 1_000_000)).toThrow()
+        expect(() => writeTo(c, 1, 4)).toThrow()
+        expect(c.p).toBe(2)
+    })
+
+    it('accepts a write that exactly fills the remaining buffer', () => {
+        const c = cursor(new Uint8Array(4))
+        writeTo(c, 1_000_000)
+        expect(c.p).toBe(4)
+        expect(readFrom(cursor(c.buf))).toBe(1_000_000)
+    })
 })
 
 describe('8-byte varints above MAX are rejected, never wrapped', () => {
