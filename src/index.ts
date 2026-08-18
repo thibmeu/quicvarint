@@ -218,6 +218,9 @@ export const writeTo = (c: Cursor, n: number, len?: number): void => {
     } else if (len < minLen) {
         throw new Error(`Length ${len} insufficient for value ${n}, need at least ${minLen}`)
     }
+    if (c.buf.length - c.p < len) {
+        throw new Error(`Need ${len} bytes but only ${c.buf.length - c.p} available`)
+    }
     encodeAt(c.buf, c.p, n, len)
     c.p += len
 }
