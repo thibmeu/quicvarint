@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-18
+
+### Added
+
+- `Cursor` interface (`{ buf, p }`) and `readFrom`, `tryReadFrom`, `writeTo` for reading and writing varints in place. They return a bare number and advance the cursor rather than allocating a subarray and a result object per call, which is 2.7-3.9x faster for parsers reading a run of varints. `tryReadFrom` returns `undefined` on a truncated varint, for incremental parsers where a short read is expected rather than an error
+
+### Fixed
+
+- `read()` now rejects 8-byte varints above `MAX`. It previously assembled them with 32-bit shifts and returned a wrapped value, which could be negative — `[0xc0, 0, 0, 0, 0x80, 0, 0, 0]` returned `-2147483648`. `decode()` was already bounded (0.1.6); `read()` was missed
+
+### Changed
+
+- All entry points share one decode and one encode implementation
+
 ## [0.1.7] - 2026-06-06
 
 ### Added

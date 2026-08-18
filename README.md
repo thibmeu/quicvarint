@@ -18,6 +18,7 @@ Variable-Length Integer Encoding defined by [RFC 9000](https://www.rfc-editor.or
 
 * Decode a 2-MSB varint from a DataView or a Uint8Array
 * Encode a 2-MSB varint to a Uint8Array
+* Read and write varints in place through a cursor, without per-call allocation
 * Support integer between 0 and 2147483647 included
 * TypeScript types
 
@@ -34,6 +35,28 @@ const encN = encode(n)
 
 // Decode it and print it on console
 console.log(decode(encN))
+```
+
+### Cursor
+
+A cursor is any `{ buf, p }`, so a parser can pass its own state object. `readFrom`
+and `writeTo` advance `p` and allocate nothing; `tryReadFrom` returns `undefined`
+when the buffer ends mid-varint, for incremental parsing.
+
+```typescript
+import { readFrom, tryReadFrom, writeTo } from "quicvarint"
+
+const buf = new Uint8Array(16)
+
+const w = { buf, p: 0 }
+writeTo(w, 1)
+writeTo(w, 1234)
+
+const r = { buf, p: 0 }
+console.log(readFrom(r), readFrom(r)) // 1 1234
+
+// undefined instead of throwing when more bytes are needed
+console.log(tryReadFrom({ buf: new Uint8Array([0x80]), p: 0 })) // undefined
 ```
 
 ## Security Considerations

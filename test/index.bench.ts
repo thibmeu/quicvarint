@@ -1,5 +1,5 @@
 import { describe, bench } from 'vitest'
-import { decode, encode, read } from '../src'
+import { decode, encode, read, readFrom, tryReadFrom, writeTo } from '../src'
 
 // Tests taken from https://github.com/quic-go/quic-go/blob/09bb613c6679ba130e950214a178ded510741578/quicvarint/varint_test.go
 // There are no test vectors on RFC 9000
@@ -54,6 +54,63 @@ describe('Benchmarking 1024 decode', () => {
         bench(name, () => {
             for (const input of inputs) {
                 decode(input.b)
+            }
+        })
+    })
+})
+
+describe('Benchmarking sequential parse of 1024 varints', () => {
+    tests.forEach(({ name, input }) => {
+        const values = randomValues(1024, input)
+        const total = values.reduce((n, v) => n + v.b.length, 0)
+        const buf = new Uint8Array(total)
+        let off = 0
+        for (const v of values) {
+            buf.set(v.b, off)
+            off += v.b.length
+        }
+
+        bench(`${name} - decode + subarray`, () => {
+            let p = 0
+            while (p < buf.length) {
+                p += decode(buf.subarray(p)).usize
+            }
+        })
+
+        bench(`${name} - readFrom cursor`, () => {
+            const c = { buf, p: 0 }
+            while (c.p < buf.length) {
+                readFrom(c)
+            }
+        })
+
+        bench(`${name} - tryReadFrom cursor`, () => {
+            const c = { buf, p: 0 }
+            while (c.p < buf.length) {
+                tryReadFrom(c)
+            }
+        })
+    })
+})
+
+describe('Benchmarking sequential write of 1024 varints', () => {
+    tests.forEach(({ name, input }) => {
+        const values = randomValues(1024, input).map((v) => v.v)
+        const out = new Uint8Array(values.length * 8)
+
+        bench(`${name} - encode + copy`, () => {
+            let p = 0
+            for (const v of values) {
+                const b = encode(v)
+                out.set(b, p)
+                p += b.length
+            }
+        })
+
+        bench(`${name} - writeTo cursor`, () => {
+            const c = { buf: out, p: 0 }
+            for (const v of values) {
+                writeTo(c, v)
             }
         })
     })
