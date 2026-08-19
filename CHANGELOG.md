@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-19
+
+### Changed
+
+- Sourcemaps no longer inline `sourcesContent`; `src/` ships in the package instead, so the source is published once rather than once per format. Maps still resolve, since their paths are relative to `dist/`. Tarball 6.8 -> 5.7 kB, unpacked 35.9 -> 28.2 kB; the emitted JS is unchanged
+
 ## [0.2.0] - 2026-08-18
 
 ### Added
