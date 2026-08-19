@@ -19,11 +19,12 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "scripts": {
     "bench": "vitest bench",
-    "build": "tsdown --format esm,cjs --sourcemap --target es2022",
+    "build": "tsdown",
     "format": "prettier --write \"{src,test}/**/*.ts\" && oxlint --fix src test",
     "lint": "prettier --check \"{src,test}/**/*.ts\" && oxlint src test",
     "prepublishOnly": "npm run build",
