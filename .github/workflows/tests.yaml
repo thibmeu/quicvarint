@@ -59,7 +59,7 @@ jobs:
       - name: Benchmark main
         # ponytail: keep both native tables in one job; add persisted results only if CI must enforce a threshold.
         run: |
-          git checkout main -- src
+          git checkout origin/main -- src
           npm run bench -- --run
 
       - name: Restore PR implementation
