@@ -56,14 +56,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run benchmark for PR branch
-        run: npm run bench -- --run --outputJson bench.json
+      - name: Benchmark main
+        # ponytail: keep both native tables in one job; add persisted results only if CI must enforce a threshold.
+        run: |
+          git checkout main -- src
+          npm run bench -- --run
 
-      - name: Checkout main branch
-        run: git checkout main
+      - name: Restore PR implementation
+        run: git restore --source=HEAD --staged --worktree src
 
-      - name: Install dependencies (main branch)
-        run: npm ci
-
-      - name: Compare benchmark for main branch
-        run: npm run bench -- --run --compare bench.json
+      - name: Benchmark PR
+        run: npm run bench -- --run
