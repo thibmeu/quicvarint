@@ -4,7 +4,7 @@ const MAX_VARINT_4 = 0x3fffffff
 const MAX_VARINT_8 = 0x7fffffff // not going above 31-1 bits
 
 export const MIN = 0
-export const MAX = MAX_VARINT_8
+export const MAX: typeof MAX_VARINT_8 = MAX_VARINT_8
 
 const PREFIX_MASK = 0b0011_1111
 
