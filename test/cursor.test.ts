@@ -43,7 +43,8 @@ describe('tryReadFrom', () => {
 
     it('throws on values above MAX -- malformed, not incomplete', () => {
         const c = cursor(new Uint8Array([0xc0, 0, 0, 0, 0x80, 0, 0, 0]))
-        expect(() => tryReadFrom(c)).toThrow()
+        expect(() => tryReadFrom(c)).toThrow(RangeError)
+        expect(c.p).toBe(0)
     })
 })
 
@@ -70,6 +71,24 @@ describe('writeTo', () => {
 
     it('rejects a length too small for the value', () => {
         expect(() => writeTo(cursor(new Uint8Array(8)), 16384, 2)).toThrow()
+    })
+
+    it('rejects invalid values and offsets before mutating the buffer or cursor', () => {
+        const buf = new Uint8Array([9, 9])
+        for (const [p, n] of [
+            [-1, 1],
+            [0.5, 1],
+            [NaN, 1],
+            [0, NaN],
+            [0, 1.5],
+        ]) {
+            const c = cursor(buf, p)
+            expect(() => writeTo(c, n)).toThrow(RangeError)
+            expect(c.p).toBe(p)
+        }
+        expect(buf).toEqual(new Uint8Array([9, 9]))
+        expect(() => encode(NaN)).toThrow(RangeError)
+        expect(() => encode(1.5)).toThrow(RangeError)
     })
 
     it('rejects a buffer too small to hold the varint', () => {
