@@ -1,7 +1,7 @@
 const MAX_VARINT_1 = 0x3f
 const MAX_VARINT_2 = 0x3fff
 const MAX_VARINT_4 = 0x3fffffff
-const MAX_VARINT_8 = 0x7fffffff // not going above 31-1 bits
+const MAX_VARINT_8 = 0x7fffffff
 
 export const MIN = 0
 export const MAX: typeof MAX_VARINT_8 = MAX_VARINT_8
@@ -24,7 +24,7 @@ const assemble8 = (
     b7: number,
 ): number => {
     if ((b0 & PREFIX_MASK) !== 0 || b1 !== 0 || b2 !== 0 || b3 !== 0 || b4 > 0x7f) {
-        throw new Error(`Cannot decode number greater than ${MAX}`)
+        throw new RangeError(`Cannot decode number greater than ${MAX}`)
     }
     return (b4 << 24) | (b5 << 16) | (b6 << 8) | b7
 }
@@ -95,6 +95,9 @@ const encodeAt = (buf: Uint8Array, off: number, n: number, len: number): void =>
 }
 
 export const length = (n: number): number => {
+    if (!Number.isInteger(n)) {
+        throw new RangeError('Value must be an integer')
+    }
     if (n < MIN) {
         throw new Error('Cannot encode negative numbers')
     }
@@ -168,14 +171,19 @@ export const read = (input: DataView, offset: number): { value: number; usize: n
     return { value, usize }
 }
 
-export const encode = (n: number, len?: number): Uint8Array => {
-    const minLen = length(n)
-    if (len === undefined) {
-        len = minLen
-    } else if (len < minLen) {
-        throw new Error(`Length ${len} insufficient for value ${n}, need at least ${minLen}`)
+const checkedLength = (minLen: number, len = minLen): number => {
+    if (len === minLen) return len
+    if (len !== 1 && len !== 2 && len !== 4 && len !== 8) {
+        throw new RangeError('Length must be 1, 2, 4, or 8')
     }
+    if (len < minLen) {
+        throw new RangeError(`Length ${len} insufficient, need at least ${minLen}`)
+    }
+    return len
+}
 
+export const encode = (n: number, len?: number): Uint8Array => {
+    len = checkedLength(length(n), len)
     const bytes = new Uint8Array(len)
     encodeAt(bytes, 0, n, len)
     return bytes
@@ -196,6 +204,10 @@ export const readFrom = (c: Cursor): number => {
     return value
 }
 
+/**
+ * Returns undefined for incomplete input. Throws RangeError for values above MAX.
+ * The cursor is advanced only on success.
+ */
 export const tryReadFrom = (c: Cursor): number | undefined => {
     const { buf, p } = c
     const b0 = buf[p]
@@ -212,12 +224,10 @@ export const tryReadFrom = (c: Cursor): number | undefined => {
 }
 
 export const writeTo = (c: Cursor, n: number, len?: number): void => {
-    const minLen = length(n)
-    if (len === undefined) {
-        len = minLen
-    } else if (len < minLen) {
-        throw new Error(`Length ${len} insufficient for value ${n}, need at least ${minLen}`)
+    if (!Number.isInteger(c.p) || c.p < 0) {
+        throw new RangeError('Cursor position must be a non-negative integer')
     }
+    len = checkedLength(length(n), len)
     if (c.buf.length - c.p < len) {
         throw new Error(`Need ${len} bytes but only ${c.buf.length - c.p} available`)
     }
