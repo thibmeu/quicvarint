@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-11-18
+
+### Fixed
+
+- Encoding rejects noninteger values and invalid explicit widths. Cursor writes reject negative or fractional offsets before mutating the buffer.
+
+### Changed
+
+- Documented the supported range of 0 through `2^31 − 1` and clarified that `tryReadFrom` returns `undefined` for incomplete input and throws `RangeError` for values above `MAX`.
+
 ## [0.2.1] - 2026-08-19
 
 ### Changed
